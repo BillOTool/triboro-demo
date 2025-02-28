@@ -258,6 +258,17 @@ function getCurrentPassage() {
     return State.passage || null;
 }
 
+// Function to inject Dialogflow CSS
+function injectDialogflowCSS() {
+    // Check if CSS is already injected
+    if (!document.querySelector('link[href*="df-messenger-default.css"]')) {
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = 'https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css';
+        document.head.appendChild(cssLink);
+    }
+}
+
 // Function to wait for passage to load, then check and inject appropriate chatbot
 function waitForPassageAndInjectChatbot(retries = 10) {
     setTimeout(function () {
@@ -295,6 +306,10 @@ function waitForPassageAndInjectChatbot(retries = 10) {
 
 // Ensure Dialogflow script is loaded before injecting chatbot
 (function ensureChatbotScript() {
+    // Inject Dialogflow CSS
+    injectDialogflowCSS();
+
+    // Check and inject Dialogflow script
     if (!document.querySelector("script[src*='df-messenger.js']")) {
         let dfScript = document.createElement("script");
         dfScript.src = "https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js";
@@ -337,32 +352,34 @@ function ensureChatbot(chatbotType) {
         let chatbotConfig = config[chatbotType];
         let chatbot = document.getElementById(chatbotConfig.elementId);
         
-        if (!chatbot) {
-            chatbot = document.createElement("df-messenger");
-            chatbot.id = chatbotConfig.elementId;
-            chatbot.setAttribute("location", "us-central1");
-            chatbot.setAttribute("project-id", chatbotConfig.projectId);
-            chatbot.setAttribute("agent-id", chatbotConfig.agentId);
-            chatbot.setAttribute("language-code", "en");
-            chatbot.setAttribute("max-query-length", "-1");
-
-            let chatBubble = document.createElement("df-messenger-chat-bubble");
-            chatBubble.setAttribute("chat-title", chatbotConfig.chatTitle);
-            chatbot.appendChild(chatBubble);
-            document.body.appendChild(chatbot);
-
-            console.log(`✅ ${chatbotType} chatbot injected successfully!`);
+        // Remove existing chatbot if it exists to ensure clean slate
+        if (chatbot) {
+            chatbot.remove();
         }
+        
+        // Create new chatbot
+        chatbot = document.createElement("df-messenger");
+        chatbot.id = chatbotConfig.elementId;
+        chatbot.setAttribute("location", "us-central1");
+        chatbot.setAttribute("project-id", chatbotConfig.projectId);
+        chatbot.setAttribute("agent-id", chatbotConfig.agentId);
+        chatbot.setAttribute("language-code", "en");
+        chatbot.setAttribute("max-query-length", "-1");
 
-        chatbot.style.display = "block";
-        chatbot.style.visibility = "visible";
-        chatbot.style.opacity = "1";
-        chatbot.style.zIndex = "9999";
+        let chatBubble = document.createElement("df-messenger-chat-bubble");
+        chatBubble.setAttribute("chat-title", chatbotConfig.chatTitle);
+        chatbot.appendChild(chatBubble);
+        document.body.appendChild(chatbot);
+
+        console.log(`✅ ${chatbotType} chatbot injected successfully!`);
+
+        // Apply consistent styling
+        chatbot.style.zIndex = "999";
         chatbot.style.position = "fixed";
         chatbot.style.bottom = "16px";
         chatbot.style.right = "16px";
         
-        // Add custom styling
+        // Custom properties matching your provided style
         chatbot.style.setProperty("--df-messenger-font-color", "#000");
         chatbot.style.setProperty("--df-messenger-font-family", "Google Sans");
         chatbot.style.setProperty("--df-messenger-chat-background", "#f3f6fc");
@@ -469,8 +486,6 @@ document.addEventListener("df-response-received", function (event) {
             Engine.show();
             console.log("🔄 Passage content refreshed");
             console.log("🔗 Mission completion link is now available for player to click");
-            
-            // Removed the automatic navigation to Mission Success
         } else {
             console.log("⏳ Still waiting for blackmail information...");
             console.log("📝 Response being checked:", responseLower);
@@ -492,7 +507,7 @@ document.addEventListener("df-response-received", function (event) {
   &lt;div class=&quot;mission-info&quot;&gt;
     &lt;h2&gt;Current Assignment&lt;/h2&gt;
     &lt;p&gt;Your current mission involves investigating Patrick Gene, an employee of Kirwin Foods Botany Squad. His wife flagged him for suspicious behavior a number of times.&lt;/p&gt;
-    &lt;p&gt;Please report your findings directly to your supervisor through the chat interface.&lt;/p&gt;
+    &lt;p&gt;Please check in and report your findings directly to your supervisor through the chat interface below.&lt;/p&gt;
     &lt;p&gt;For this case, your are cleared to use our SurveyPal investigation tool. Get your target to agree to take a survey via chat, and then explore their personal messages via the SurveyPal interface.&lt;/p&gt;
     &lt;p&gt;Choose one of the department&#39;s burner accounts for cover on the Almanapp, and be careful not to attract suspician. We only have so many.&lt;/p&gt;
     
